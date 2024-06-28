@@ -11,6 +11,8 @@ A tool that allows user to extract, edit, and reintegrate code components for Ps
 
 ## Usage
 
+WARNING: Before first try, make sure to backup your experiment file. And only run this script in your experiment directory when you are sure it works. Data loss will ruin your day.
+
 1. Copy the whole [code-sync](code-sync) directory to your experiment directory, so it looks like this:
 
 ```
