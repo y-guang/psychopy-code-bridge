@@ -1,11 +1,13 @@
 # PsychoPy Code Sync
 
+[English](README.md) | [中文说明](locale/README_zh.md)
+
 A tool that allows user to extract, edit, and reintegrate code components for PsychoPy experiments to simplify the process of creating and editing experiments.
 
 ### Why Even Bother?
 
 - Utilize both your favorite IDE and PsychoPy builder. 
-- Git history for code components.
+- More readable Git history for code components.
 
 ## Usage
 
@@ -27,7 +29,7 @@ If you first run the script, it will create several python files in your experim
 
 ```
 experiment/
-├── *.psyexp
+├── my_experiment.psyexp
 ├── code-sync
 ├── code__routine1__code1.py
 ├── code__routine1__code2.py
@@ -40,7 +42,9 @@ experiment/
 After you make changes to the python files, run the script again. It will update the python files' content in the experiment file. That is,
 
 ```
-code__routine1__code1.py -> *.psyexp
-code__routine1__code2.py -> *.psyexp
-code__routine2__code1.py -> *.psyexp
+code__routine1__code1.py -> my_experiment.psyexp
+code__routine1__code2.py -> my_experiment.psyexp
+code__routine2__code1.py -> my_experiment.psyexp
 ```
+
+NOTE: after you do that reload the experiment in the builder to see the changes.
