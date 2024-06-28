@@ -14,10 +14,11 @@ STAGE_COMMENT_TEMPLATE = """
 ########################################################################################################################
 """.strip()
 
-PREFACE_COMMENT = """
+PREFACE_COMMENT_TEMPLATE = """
 ########################################################################################################################
-# PREFACE 
+# Prologue
 # It is auto generated. DO NOT MODIFY THE COMMENT.
+# This part will NOT be synced and executed. Add what you want to make the language server happy.
 ########################################################################################################################
 {code_import}
 """.strip()
@@ -83,15 +84,22 @@ def build_code_file_name(routine: ET.Element, code: ET.Element) -> str:
     return CODE_FILENAME_TEMPLATE.format(routine_name=routine_name, code_name=code_name)
 
 
-def download_code_files(routine: ET.Element, component: ET.Element, path: pathlib.Path):
+def build_code_preface(import_files: List[pathlib.Path]) -> str:
+    code_import = '\n'.join(f'from {file.stem} import *' for file in import_files)
+    preface = f'{PREFACE_COMMENT_TEMPLATE.format(code_import=code_import)}\n'
+    return preface
+
+
+def download_code_files(routine: ET.Element, component: ET.Element, path: pathlib.Path, prev_file: pathlib.Path):
     """
     Save the code component to the path.
     """
     # extract codes form the component
     code_params: Dict[str, ET.Element] = {
         param.attrib['name']: param for param in component}
-    codes: List[str] = []
+    codes: List[str] = [build_code_preface([prev_file])]
 
+    # extract the interested code stages
     for stage in CODE_STAGES:
         code_param = code_params.get(stage)
         if code_param is None:
@@ -115,7 +123,7 @@ def upload_code_files(routine: ET.Element, component: ET.Element, path: pathlib.
     pass
 
 
-def copy_preface(preface_dest_path: pathlib.Path):
+def copy_preface_file(preface_dest_path: pathlib.Path):
     """
     Prepare the preface file.
     """
@@ -139,7 +147,7 @@ def sync_experiment(experiment_path: pathlib.Path):
     preface_path = CODE_FOLDER / PREFACE_FILENAME
     if not preface_path.exists():
         try:
-            copy_preface(preface_path)
+            copy_preface_file(preface_path)
             logging.info('Preface file is created')
         except Exception as e:
             return
@@ -150,17 +158,19 @@ def sync_experiment(experiment_path: pathlib.Path):
     code_components = extract_routines_code(routines)
 
     # check if these code components are already in the code folder
+    prev_file: pathlib.Path = preface_path
     code_paths = [(CODE_FOLDER / build_code_file_name(routine, code)).resolve()
                   for routine, code in code_components]
     for i, code_path in enumerate(code_paths):
         if not code_path.exists():
             # create the code file
             routine, code = code_components[i]
-            download_code_files(routine, code, code_path)
+            download_code_files(routine, code, code_path, prev_file)
             logging.info(f'{code_path.name} is created')
         else:
             # TODO: update the code component
             pass
+        prev_file = code_path
 
 
 if __name__ == '__main__':
