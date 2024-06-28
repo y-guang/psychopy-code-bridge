@@ -50,3 +50,23 @@ code__routine2__code1.py -> my_experiment.psyexp
 ```
 
 NOTE: after you do that reload the experiment in the builder to see the changes.
+
+---
+
+After you modify the code in the builder, simply delete the corresponding python file. The script will create a new python file with the updated content.
+
+```
+experiment/
+├── my_experiment.psyexp
+├── code-sync
+├── code__routine1__code1.py
+├── (deleted)
+├── code__routine2__code1.py
+├── ...
+```
+
+will result in
+
+```
+my_experiment.psyexp -> code__routine1__code2.py
+```
