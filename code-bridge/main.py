@@ -1,6 +1,7 @@
 import pathlib
 import xml.etree.ElementTree as ET
-
+import logging
+import html
 
 CODE_STAGES = [
     'Before Experiment',
@@ -11,17 +12,19 @@ CODE_STAGES = [
     'End Experiment',
 ]
 
-def handle_code_component(component: ET.Element):
-    print(f'Code component: {component.attrib["name"]}')
-    codes: dict[str, ET.Element] = {param.attrib['name']: param for param in component}
+def handle_code_component(routine: ET.Element, component: ET.Element):
+    code_params: dict[str, ET.Element] = {param.attrib['name']: param for param in component}
+
     for stage in CODE_STAGES:
-        code = codes.get(stage)
-        if code is None:
+        code_param = code_params.get(stage)
+        if code_param is None:
+            logging.warning(f'stage {stage} is missing in routine [{routine.attrib["name"]}] component [{component.attrib["name"]}]')
             continue
-        print(f'Code for {stage}:')
-        print(code.attrib['val'])
-        print()
-        
+        encoded_code = code_param.attrib['val']
+        decoded_code = html.unescape(encoded_code)
+        # TODO: continue here
+
+   
 
 TOOL_FOLDER = pathlib.Path(__file__).resolve().parent
 EXPERIMENT_FOLDER = TOOL_FOLDER.parent
@@ -44,4 +47,4 @@ for routine in routines:
     for component in routine:
         if component.tag != 'CodeComponent':
             continue
-        handle_code_component(component)
+        handle_code_component(routine, component)
