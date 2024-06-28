@@ -85,7 +85,8 @@ def build_code_file_name(routine: ET.Element, code: ET.Element) -> str:
 
 
 def build_code_preface(import_files: List[pathlib.Path]) -> str:
-    code_import = '\n'.join(f'from {file.stem} import *' for file in import_files)
+    code_import = '\n'.join(
+        f'from {file.stem} import *' for file in import_files)
     preface = f'{PREFACE_COMMENT_TEMPLATE.format(code_import=code_import)}\n'
     return preface
 
@@ -119,8 +120,39 @@ def upload_code_files(routine: ET.Element, component: ET.Element, path: pathlib.
     """
     Upload the code file to the component.
     """
-    # TODO: fix
-    pass
+    code_params: Dict[str, ET.Element] = {
+        param.attrib['name']: param for param in component}
+
+    # read the code file
+    with path.open('r') as code_file:
+        all_stage_code = code_file.read()
+
+    # reversely parse the code to the component
+    reverse_stages = CODE_STAGES.copy()
+    reverse_stages.reverse()
+    for stage in reverse_stages:
+        # find the stage code
+        stage_comment = STAGE_COMMENT_TEMPLATE.format(stage=stage)
+        start = all_stage_code.find(stage_comment)
+        if start == -1:
+            logging.error(f'SKIP current file: stage {stage} is missing in the code file {path.name}.')
+            break
+        copy_start = start + len(stage_comment)  # skip the newline
+        code = all_stage_code[copy_start:].strip()  # skip the newline
+        all_stage_code = all_stage_code[:start]
+
+        # put the code to the component
+        code_param = code_params.get(stage)
+        if code_param is None:
+            logging.error(
+                f'stage {stage} is missing in routine [{routine.attrib["name"]}] component [{component.attrib["name"]}')
+            break
+        old_code = html.unescape(code_param.attrib['val']).strip()
+        if code != old_code:
+            escaped_code = html.escape(code)
+            code_param.attrib['val'] = escaped_code
+            logging.info(f'[{routine.attrib["name"]}] [{component.attrib["name"]}] [{stage}] is updated')
+
 
 
 def copy_preface_file(preface_dest_path: pathlib.Path):
@@ -162,15 +194,18 @@ def sync_experiment(experiment_path: pathlib.Path):
     code_paths = [(CODE_FOLDER / build_code_file_name(routine, code)).resolve()
                   for routine, code in code_components]
     for i, code_path in enumerate(code_paths):
+        routine, code = code_components[i]
         if not code_path.exists():
             # create the code file
-            routine, code = code_components[i]
             download_code_files(routine, code, code_path, prev_file)
             logging.info(f'{code_path.name} is created')
         else:
-            # TODO: update the code component
-            pass
+            # update the code file to experiment
+            upload_code_files(routine, code, code_path)
         prev_file = code_path
+    
+    # write the changes to the experiment
+    tree.write(experiment_path, encoding='utf-8', xml_declaration=True)
 
 
 if __name__ == '__main__':
