@@ -1,7 +1,29 @@
+import logging.config
 import pathlib
 import xml.etree.ElementTree as ET
 import logging
 import html
+from typing import List, Dict, Tuple
+import shutil
+
+# settings
+STAGE_COMMENT_TEMPLATE = """
+########################################################################################################################
+# {stage}
+# It is auto generated. DO NOT MODIFY THE COMMENT
+########################################################################################################################
+""".strip()
+
+PREFACE_COMMENT = """
+########################################################################################################################
+# PREFACE 
+# It is auto generated. DO NOT MODIFY THE COMMENT.
+########################################################################################################################
+{code_import}
+""".strip()
+
+CODE_FILENAME_TEMPLATE = 'code__{routine_name}__{code_name}.py'
+PREFACE_FILENAME = 'code__preface.py'
 
 CODE_STAGES = [
     'Before Experiment',
@@ -12,33 +34,63 @@ CODE_STAGES = [
     'End Experiment',
 ]
 
-STAGE_COMMENT_TEMPLATE = """
-########################################################################################################################
-# {stage} ----------------- auto generated. DO NOT MODIFY THE COMMENT
-########################################################################################################################
-""".strip()
+RELATIVE_CODE_PATH_OF_EXPERIMENT = '.'
 
-CODE_FILENAME_TEMPLATE = 'code_{routine_name}.py'
+logging.basicConfig(level=logging.INFO)
 
-
+# evaluate the paths
 TOOL_FOLDER = pathlib.Path(__file__).resolve().parent
 EXPERIMENT_FOLDER = TOOL_FOLDER.parent
-
-# TODO: what if more than one .psyexp file is found?
-# find the .psyexp experiment in the experiment folder
-for file in EXPERIMENT_FOLDER.iterdir():
-    if file.suffix == '.psyexp':
-        experiment_file = file
-        break
-else:
-    raise FileNotFoundError('No .psyexp file found in the experiment folder')
+CODE_FOLDER = (EXPERIMENT_FOLDER / RELATIVE_CODE_PATH_OF_EXPERIMENT).resolve()
+PREFACE_SRC_PATH = TOOL_FOLDER / 'resources' / 'preface.py'
 
 
-def handle_code_component(routine: ET.Element, component: ET.Element):
+def find_experiments(folder_path: pathlib.Path) -> List[pathlib.Path]:
+    """
+    Find all the experiment files in the experiment folder.
+    """
+    experiment_files = [
+        file for file in folder_path.iterdir() if file.suffix == '.psyexp']
+    return experiment_files
+
+
+def extract_routines(tree: ET.ElementTree) -> ET.Element:
+    """
+    Extract routines element from the tree.
+    """
+    root = tree.getroot()
+    routines = root.find('Routines')
+    assert routines is not None, 'No Routines element found in the experiment file'
+    return routines
+
+
+def extract_routines_code(routines: ET.Element) -> List[Tuple[ET.Element, ET.Element]]:
+    """
+    Extract code components from the routines with their parent routine element
+    """
+    code_components: List[Tuple[ET.Element, ET.Element]] = []
+    for routine in routines:
+        for component in routine:
+            if component.tag != 'CodeComponent':
+                continue
+            code_components.append((routine, component))
+    return code_components
+
+
+def build_code_file_name(routine: ET.Element, code: ET.Element) -> str:
+    routine_name = routine.attrib['name']
+    code_name = code.attrib['name']
+    return CODE_FILENAME_TEMPLATE.format(routine_name=routine_name, code_name=code_name)
+
+
+def download_code_files(routine: ET.Element, component: ET.Element, path: pathlib.Path):
+    """
+    Save the code component to the path.
+    """
     # extract codes form the component
-    code_params: dict[str, ET.Element] = {
+    code_params: Dict[str, ET.Element] = {
         param.attrib['name']: param for param in component}
-    codes: list[str] = []
+    codes: List[str] = []
 
     for stage in CODE_STAGES:
         code_param = code_params.get(stage)
@@ -51,21 +103,75 @@ def handle_code_component(routine: ET.Element, component: ET.Element):
         codes.append(
             f'{STAGE_COMMENT_TEMPLATE.format(stage=stage)}\n{decoded_code}\n')
 
-    # save to the EXPERIMENT_FOLDER
-    routine_name = routine.attrib['name']
-    code_file_name = CODE_FILENAME_TEMPLATE.format(routine_name=routine_name)
-    code_file_path = EXPERIMENT_FOLDER / code_file_name
-    with code_file_path.open('w') as code_file:
+    with path.open('w') as code_file:
         code_file.write(''.join(codes))
 
 
-# parse the .psyexp file
-tree = ET.parse(experiment_file)
-root = tree.getroot()
-routines = root.find('Routines')
-assert routines is not None
-for routine in routines:
-    for component in routine:
-        if component.tag != 'CodeComponent':
-            continue
-        handle_code_component(routine, component)
+def upload_code_files(routine: ET.Element, component: ET.Element, path: pathlib.Path):
+    """
+    Upload the code file to the component.
+    """
+    # TODO: fix
+    pass
+
+
+def copy_preface(preface_dest_path: pathlib.Path):
+    """
+    Prepare the preface file.
+    """
+    try:
+        shutil.copy(PREFACE_SRC_PATH, preface_dest_path)
+    except FileNotFoundError as e:
+        logging.error('Preface file is missing')
+        raise e
+    except FileExistsError as e:
+        logging.error('Preface file already exists')
+        raise e
+    except Exception as e:
+        logging.error(f'Error: {e}')
+
+
+def sync_experiment(experiment_path: pathlib.Path):
+    """
+    Sync the experiment with the code files.
+    """
+    # copy the preface to the code folder
+    preface_path = CODE_FOLDER / PREFACE_FILENAME
+    if not preface_path.exists():
+        try:
+            copy_preface(preface_path)
+            logging.info('Preface file is created')
+        except Exception as e:
+            return
+
+    # parse the .psyexp file
+    tree = ET.parse(experiment_path)
+    routines = extract_routines(tree)
+    code_components = extract_routines_code(routines)
+
+    # check if these code components are already in the code folder
+    code_paths = [(CODE_FOLDER / build_code_file_name(routine, code)).resolve()
+                  for routine, code in code_components]
+    for i, code_path in enumerate(code_paths):
+        if not code_path.exists():
+            # create the code file
+            routine, code = code_components[i]
+            download_code_files(routine, code, code_path)
+            logging.info(f'{code_path.name} is created')
+        else:
+            # TODO: update the code component
+            pass
+
+
+if __name__ == '__main__':
+    experiment_paths = find_experiments(EXPERIMENT_FOLDER)
+    assert len(
+        experiment_paths) > 0, 'No .psyexp file found in the experiment folder'
+
+    # preparing
+    if not CODE_FOLDER.exists():
+        CODE_FOLDER.mkdir()
+
+    for experiment_path in experiment_paths:
+        logging.info(f'Syncing experiment {experiment_path.name}')
+        sync_experiment(experiment_path)
