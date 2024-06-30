@@ -1,9 +1,7 @@
-"""
-IGNORE me. 
-This is just a preface to make the language server happy.
-If it is not meaningful to you, you can safely ignore me.
-Copied from built PsychoPy project.
-"""
+# IGNORE me. 
+# This is just a preface to make the language server happy.
+# If it is not meaningful to you, you can safely ignore me.
+# Copied from built PsychoPy project.
 
 # --- Import packages ---
 from psychopy import locale_setup

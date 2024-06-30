@@ -35,9 +35,52 @@ import xml.etree.ElementTree as ET
 import logging
 import html
 from typing import List, Dict, Tuple
-import shutil
 
 # settings
+PREFACE_FILE_CONTENT = """
+# IGNORE me. 
+# This is just a preface to make the language server happy.
+# If it is not meaningful to you, you can safely ignore me.
+# Copied from built PsychoPy project.
+
+# --- Import packages ---
+from psychopy import locale_setup
+from psychopy import prefs
+from psychopy import plugins
+plugins.activatePlugins()
+from psychopy import sound, gui, visual, core, data, event, logging, clock, colors, layout, hardware
+from psychopy.tools import environmenttools
+from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
+                                STOPPED, FINISHED, PRESSED, RELEASED, FOREVER, priority)
+
+import numpy as np  # whole numpy lib is available, prepend 'np.'
+from numpy import (sin, cos, tan, log, log10, pi, average,
+                   sqrt, std, deg2rad, rad2deg, linspace, asarray)
+from numpy.random import random, randint, normal, shuffle, choice as randchoice
+import os  # handy system and path functions
+import sys  # to get file system encoding
+
+import psychopy.iohub as io
+from psychopy.hardware import keyboard
+win = visual.Window( screen=0,
+    winType='pyglet', allowStencil=False,
+    monitor='testMonitor', color=[0,0,0], colorSpace='rgb',
+    backgroundImage='', backgroundFit='none',
+    blendMode='avg', useFBO=True,
+    units='height', 
+    checkTiming=False  # we're going to do this ourselves in a moment
+)
+
+thisExp = data.ExperimentHandler(
+    name="exp", version='',
+    extraInfo={}, runtimeInfo=None,
+    originPath='C:\\Users\\spike\\OneDrive\\workspace\\motion-induced-LSNR\\lsnr_only\\main.py',
+    savePickle=True, saveWideText=True
+)
+    # --- Initialize components for Routine "trial" ---
+"""
+
+
 STAGE_COMMENT_TEMPLATE = """
 ########################################################################################################################
 # {stage}
@@ -74,7 +117,6 @@ logging.basicConfig(level=logging.INFO)
 TOOL_FOLDER = pathlib.Path(__file__).resolve().parent
 EXPERIMENT_FOLDER = TOOL_FOLDER.parent
 CODE_FOLDER = (EXPERIMENT_FOLDER / RELATIVE_CODE_PATH_OF_EXPERIMENT).resolve()
-PREFACE_SRC_PATH = TOOL_FOLDER / 'resources' / 'preface.py'
 
 
 def find_experiments(folder_path: pathlib.Path) -> List[pathlib.Path]:
@@ -185,20 +227,16 @@ def upload_code_files(routine: ET.Element, component: ET.Element, path: pathlib.
 
 
 
-def copy_preface_file(preface_dest_path: pathlib.Path):
+def create_preface_file(preface_dest_path: pathlib.Path) -> None:
     """
     Prepare the preface file.
     """
     try:
-        shutil.copy(PREFACE_SRC_PATH, preface_dest_path)
-    except FileNotFoundError as e:
-        logging.error('Preface file is missing')
-        raise e
-    except FileExistsError as e:
-        logging.error('Preface file already exists')
-        raise e
+        with preface_dest_path.open('w') as preface_file:
+            preface_file.write(PREFACE_FILE_CONTENT)
     except Exception as e:
-        logging.error(f'Error: {e}')
+        logging.error(f'Failed to create preface file: {e}')
+        raise e
 
 
 def sync_experiment(experiment_path: pathlib.Path):
@@ -209,7 +247,7 @@ def sync_experiment(experiment_path: pathlib.Path):
     preface_path = CODE_FOLDER / PREFACE_FILENAME
     if not preface_path.exists():
         try:
-            copy_preface_file(preface_path)
+            create_preface_file(preface_path)
             logging.info('Preface file is created')
         except Exception as e:
             return
