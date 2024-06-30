@@ -5,8 +5,7 @@ Description: A tool that allows user to extract, edit, and reintegrate code
 Author: Guang (Spike) Yang
 Link: [psychopy-code-sync](https://github.com/y-guang/psychopy-code-sync)
 
-License:
-MIT License
+License: MIT License
 
 Copyright (c) 2024 Guang Yang
 
@@ -109,13 +108,15 @@ CODE_STAGES = [
     'End Experiment',
 ]
 
-RELATIVE_CODE_PATH_OF_EXPERIMENT = '.'
+# where is the code files is relative to the experiment folder
+RELATIVE_CODE_PATH_OF_EXPERIMENT = '.'  # same with the experiment folder
+# RELATIVE_CODE_PATH_OF_EXPERIMENT = './code'  # code folder is in the experiment folder
 
 logging.basicConfig(level=logging.INFO)
 
 # evaluate the paths
 TOOL_FOLDER = pathlib.Path(__file__).resolve().parent
-EXPERIMENT_FOLDER = TOOL_FOLDER.parent
+EXPERIMENT_FOLDER = TOOL_FOLDER
 CODE_FOLDER = (EXPERIMENT_FOLDER / RELATIVE_CODE_PATH_OF_EXPERIMENT).resolve()
 
 
