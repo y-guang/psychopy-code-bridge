@@ -2,6 +2,7 @@
 Module: code sync
 Description: A tool that allows user to extract, edit, and reintegrate code 
     components for PsychoPy experiments.
+Version: 1.0.0
 Author: Guang (Spike) Yang
 Link: [psychopy-code-sync](https://github.com/y-guang/psychopy-code-sync)
 
