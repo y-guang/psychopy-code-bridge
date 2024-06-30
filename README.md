@@ -6,9 +6,9 @@
 
 It allow you extract code components from the `.psyexp` file to **standalone Python files**, edit them in your favorite IDE, and reintegrate them back to the `.psyexp` file **with just one click**.
 
-✅ One-Click Sync: From extraction to reintegration—all it takes is a single click.
-✅ Out of The Box: Run it immediately without any setup or configurations.
-✅ Open Source: Licensed under MIT. So you can directly put it in your project without any copyright concerns.
+- ✅ One-Click Sync: From extraction to reintegration—all it takes is a single click.
+- ✅ Out of The Box: Run it immediately without any setup or configurations.
+- ✅ Open Source: Licensed under MIT. So you can directly put it in your project without any copyright concerns.
 
 ### Why Even Bother?
 
