@@ -1,8 +1,14 @@
 # PsychoPy Code Sync
 
-[English](README.md) | [中文说明](locale/README_zh.md)
+[English](README.md) | [中文说明](README.zh.md)
 
-A tool that allows user to extract, edit, and reintegrate code components for PsychoPy experiments to simplify the process of creating and editing experiments.
+**PsychoPy Code Sync** is designed to enhance the manageability and editability of your PsychoPy experiments. 
+
+It allow you extract code components from the `.psyexp` file to **standalone Python files**, edit them in your favorite IDE, and reintegrate them back to the `.psyexp` file **with just one click**.
+
+✅ One-Click Sync: From extraction to reintegration—all it takes is a single click.
+✅ Out of The Box: Run it immediately without any setup or configurations.
+✅ Open Source: Licensed under MIT. So you can directly put it in your project without any copyright concerns.
 
 ### Why Even Bother?
 
@@ -13,17 +19,16 @@ A tool that allows user to extract, edit, and reintegrate code components for Ps
 
 WARNING: Before first try, make sure to backup your experiment file. And only run this script in your experiment directory when you are sure it works. Data loss will ruin your day.
 
-1. Copy the whole [code-sync](code-sync) directory to your experiment directory, so it looks like this:
+1. Copy the [code-sync.py](code-sync.py) file to your experiment directory, so it is on the same level as your `.psyexp` file. So it looks like this:
 
 ```
 experiment/
 ├── *.psyexp
-├── code-sync/
-│   ├── main.py
+├── code-sync.py
 ├── ...
 ```
 
-2. run [main.py](code-sync/main.py) in the code-sync directory.
+2. run it directly.
 
 ## How It Works
 
@@ -32,7 +37,7 @@ If you first run the script, it will create several python files in your experim
 ```
 experiment/
 ├── my_experiment.psyexp
-├── code-sync
+├── code-sync.py
 ├── code__routine1__code1.py
 ├── code__routine1__code2.py
 ├── code__routine2__code1.py
@@ -58,7 +63,7 @@ After you modify the code in the builder, simply delete the corresponding python
 ```
 experiment/
 ├── my_experiment.psyexp
-├── code-sync
+├── code-sync.py
 ├── code__routine1__code1.py
 ├── (deleted)
 ├── code__routine2__code1.py
