@@ -2,7 +2,7 @@ import logging.config
 import pathlib
 import xml.etree.ElementTree as ET
 import logging
-from xml.sax.saxutils import unescape
+import html
 from typing import List, Dict, Tuple
 import shutil
 
@@ -108,7 +108,7 @@ def download_code_files(routine: ET.Element, component: ET.Element, path: pathli
                 f'stage {stage} is missing in routine [{routine.attrib["name"]}] component [{component.attrib["name"]}]')
             continue
         encoded_code = code_param.attrib['val']
-        decoded_code = unescape(encoded_code)
+        decoded_code = html.unescape(encoded_code)
         codes.append(
             f'{STAGE_COMMENT_TEMPLATE.format(stage=stage)}\n{decoded_code}\n')
 
@@ -147,7 +147,7 @@ def upload_code_files(routine: ET.Element, component: ET.Element, path: pathlib.
             logging.error(
                 f'stage {stage} is missing in routine [{routine.attrib["name"]}] component [{component.attrib["name"]}')
             break
-        old_code = unescape(code_param.attrib['val']).strip()  # raw code need to be unescaped
+        old_code = html.unescape(code_param.attrib['val']).strip()  # raw code need to be unescaped
         if code != old_code:
             code_param.attrib['val'] = code  # Note: when saving, it will be escaped by the ET.
             logging.info(f'[{routine.attrib["name"]}] [{component.attrib["name"]}] [{stage}] is updated')
