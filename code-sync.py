@@ -143,7 +143,7 @@ def extract_routines(tree: ET.ElementTree) -> ET.Element:
     return routines
 
 
-def extract_routines_code(routines: ET.Element) -> List[Tuple[ET.Element, ET.Element]]:
+def extract_routine_code_pairs(routines: ET.Element) -> List[Tuple[ET.Element, ET.Element]]:
     """
     Extract code components from the routines with their parent routine element
     """
@@ -260,7 +260,7 @@ def sync_experiment(experiment_path: pathlib.Path):
     # parse the .psyexp file
     tree = ET.parse(experiment_path)
     routines = extract_routines(tree)
-    code_components = extract_routines_code(routines)
+    code_components = extract_routine_code_pairs(routines)
 
     # check if these code components are already in the code folder
     prev_file: pathlib.Path = preface_path
