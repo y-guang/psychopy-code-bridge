@@ -2,7 +2,7 @@
 Module: code sync
 Description: A tool that allows user to extract, edit, and reintegrate code 
     components for PsychoPy experiments.
-Version: 1.0.0
+Version: 1.0.1
 Author: Guang (Spike) Yang
 Link: [psychopy-code-sync](https://github.com/y-guang/psychopy-code-sync)
 
@@ -77,7 +77,10 @@ thisExp = data.ExperimentHandler(
     originPath='C:\\Users\\spike\\OneDrive\\workspace\\motion-induced-LSNR\\lsnr_only\\main.py',
     savePickle=True, saveWideText=True
 )
-    # --- Initialize components for Routine "trial" ---
+
+# useful var (NOTE: make sure you know their scope in the real experiment)
+frameN: int = 0
+continueRoutine: bool = True
 """
 
 

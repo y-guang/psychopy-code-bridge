@@ -37,4 +37,7 @@ thisExp = data.ExperimentHandler(
     originPath='C:\\Users\\spike\\OneDrive\\workspace\\motion-induced-LSNR\\lsnr_only\\main.py',
     savePickle=True, saveWideText=True
 )
-    # --- Initialize components for Routine "trial" ---
+
+# useful var (NOTE: make sure you know their scope in the real experiment)
+frameN: int = 0
+continueRoutine: bool = True
