@@ -261,7 +261,8 @@ def upload_code_files(routine: ET.Element, component: ET.Element, path: pathlib.
         stage_comment = STAGE_COMMENT_TEMPLATE.format(stage=stage)
         start = all_stage_code.find(stage_comment)
         if start == -1:
-            logging.error(f'SKIP current file: stage {stage} is missing in the code file {path.name}.')
+            logging.error(
+                f'SKIP current file: stage {stage} is missing in the code file {path.name}.')
             break
         copy_start = start + len(stage_comment)  # skip the newline
         code = all_stage_code[copy_start:].strip()  # skip the newline
@@ -273,11 +274,13 @@ def upload_code_files(routine: ET.Element, component: ET.Element, path: pathlib.
             logging.error(
                 f'stage {stage} is missing in routine [{routine.attrib["name"]}] component [{component.attrib["name"]}')
             break
-        old_code = html.unescape(code_param.attrib['val']).strip()  # raw code need to be unescaped
+        # raw code need to be unescaped
+        old_code = html.unescape(code_param.attrib['val']).strip()
         if code != old_code:
-            code_param.attrib['val'] = code  # Note: when saving, it will be escaped by the ET.
-            logging.info(f'[{routine.attrib["name"]}] [{component.attrib["name"]}] [{stage}] is updated')
-
+            # Note: when saving, it will be escaped by the ET.
+            code_param.attrib['val'] = code
+            logging.info(
+                f'[{routine.attrib["name"]}] [{component.attrib["name"]}] [{stage}] is updated')
 
 
 def create_preface_file(preface_dest_path: pathlib.Path) -> None:
@@ -310,7 +313,8 @@ def sync_experiment(experiment_path: pathlib.Path):
     routines = extract_routines(tree)
     code_components = extract_routine_code_pairs(routines)
     # sort to guarantee the import order between the code files
-    code_components = sort_routine_code_pairs_by_flow(code_components, extract_flow(tree))
+    code_components = sort_routine_code_pairs_by_flow(
+        code_components, extract_flow(tree))
 
     # check if these code components are already in the code folder
     prev_file: pathlib.Path = preface_path
@@ -326,7 +330,7 @@ def sync_experiment(experiment_path: pathlib.Path):
             # update the code file to experiment
             upload_code_files(routine, code, code_path)
         prev_file = code_path
-    
+
     # write the changes to the experiment
     tree.write(experiment_path, encoding='utf-8', xml_declaration=True)
 
