@@ -2,7 +2,7 @@
 Module: code sync
 Description: A tool that allows user to extract, edit, and reintegrate code 
     components for PsychoPy experiments.
-Version: 1.0.1
+Version: 1.1.0
 Author: Guang (Spike) Yang
 Link: [psychopy-code-sync](https://github.com/y-guang/psychopy-code-sync)
 
@@ -35,6 +35,7 @@ import xml.etree.ElementTree as ET
 import logging
 import html
 from typing import List, Dict, Tuple
+from collections import OrderedDict
 
 # settings
 PREFACE_FILE_CONTENT = """
@@ -156,6 +157,53 @@ def extract_routine_code_pairs(routines: ET.Element) -> List[Tuple[ET.Element, E
     return code_components
 
 
+def extract_flow(tree: ET.ElementTree) -> ET.Element:
+    """
+    Extract flow element from the tree.
+    """
+    root = tree.getroot()
+    flow = root.find('Flow')
+    assert flow is not None, 'No Flow element found in the experiment file'
+    return flow
+
+
+def sort_routine_code_pairs_by_flow(routine_code_pairs: List[Tuple[ET.Element, ET.Element]],
+                                    flow: ET.Element
+                                    ) -> List[Tuple[ET.Element, ET.Element]]:
+    """
+    Sort the routines by the flow.
+    """
+    ordered_routines: OrderedDict[str,
+                                  List[Tuple[ET.Element, ET.Element]]] = OrderedDict()
+    unmatched_routines: List[Tuple[ET.Element, ET.Element]] = []
+
+    # build the order by extract the keys from flow
+    for component in flow:
+        # if not routine, skip
+        if component.tag != 'Routine':
+            continue
+        ordered_routines[component.attrib['name']] = []
+
+    # sort by putting each element to the ordered_routines
+    for routine, code in routine_code_pairs:
+        routine_name = routine.attrib['name']
+        if routine_name in ordered_routines:
+            ordered_routines[routine_name].append((routine, code))
+        else:
+            unmatched_routines.append((routine, code))
+            logging.warning(
+                f'Detached Routine [{routine_name}] with code [{code.attrib["name"]}]')
+
+    # convert to list
+    ordered_list = []
+    for routine_name in ordered_routines:
+        ordered_list.extend(ordered_routines[routine_name])
+    # attach the routines that are not in the flow to the end
+    ordered_list.extend(unmatched_routines)
+
+    return ordered_list
+
+
 def build_code_file_name(routine: ET.Element, code: ET.Element) -> str:
     routine_name = routine.attrib['name']
     code_name = code.attrib['name']
@@ -261,6 +309,8 @@ def sync_experiment(experiment_path: pathlib.Path):
     tree = ET.parse(experiment_path)
     routines = extract_routines(tree)
     code_components = extract_routine_code_pairs(routines)
+    # sort to guarantee the import order between the code files
+    code_components = sort_routine_code_pairs_by_flow(code_components, extract_flow(tree))
 
     # check if these code components are already in the code folder
     prev_file: pathlib.Path = preface_path
